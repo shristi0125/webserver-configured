@@ -1,0 +1,42 @@
+- hosts: all
+  tasks:
+    - name: "Docker"
+      yum_repository:
+         name: docker
+         description: "Software from docker"
+         baseurl: "https://download.docker.com/linux/centos7/x86_64/stable/"
+         gpgcheck: no
+
+    - name: "Install Docker-ce"
+      command: "yum install docker-ce --nobest -y"
+
+
+    - name: "creation workspace on target node"
+      file:
+         path: /root/ansiblewebos
+         state: directory
+    - name: "copying content into target node"
+      copy:
+         src: "index.html"
+         dest: "/root/ansiblewebos/"
+    - name: "starting docker daemon"
+      service:
+         name: docker
+         state: started
+
+    - name: "pulling httpd docker image from hub"
+      docker_image:
+         name: "httpd"
+         source: pull
+
+    - name: "starting docker"
+      docker_container:
+         name: "shristios"
+         image: httpd
+         state: started
+         detach: yes
+         interactive: true
+         ports:
+         - "1234:80"
+         volumes:
+         - /root/ansiblewebos/:/usr/local/apache2/htdocs/
